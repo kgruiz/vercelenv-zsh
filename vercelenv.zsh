@@ -34,15 +34,15 @@ function VercelEnvPush() {
         scope=("$target")
       fi
 
-      vercel env rm "$key" "${scope[@]}" --yes 2>/dev/null
-      echo "$val" | vercel env add "$key" "${scope[@]}" --yes
+      yes | vercel env rm "$key" "${scope[@]}" 2>/dev/null
+      echo "$val" | vercel env add "$key" "${scope[@]}"
     done
   done < .env.local
 }
 
-# helper: pull production vars
+# helper: pull production vars locally
 function VercelEnvPull() {
-  vercel env pull .env.production.local --environment production --yes
+  vercel env pull .env.production.local --environment production
 }
 
 # helper: clean stale keys from Vercel
@@ -56,7 +56,7 @@ function VercelEnvClean() {
       > "$tmp"
 
     while read -r key; do
-      grep -q "^$key=" .env.local || vercel env rm "$key" "$target" --yes
+      grep -q "^$key=" .env.local || vercel env rm "$key" "$target"
     done < "$tmp"
   done
 
