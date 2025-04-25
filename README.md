@@ -11,6 +11,7 @@ Keep your local `.env.local` in sync with Vercel’s development, preview, and p
 -   **Clean**: Remove variables in Vercel not listed in `.env.local`.
 -   **Branch-Scoped Preview**: Optionally scope preview vars to current Git branch.
 -   **Zsh Autocomplete**: Tab-completion for commands and flags.
+-   **Colorized Output**: Clear, colored status messages for each operation.
 -   **Single Script**: Lightweight `vercelenv.zsh` file.
 
 ## Installation
@@ -46,6 +47,7 @@ Keep your local `.env.local` in sync with Vercel’s development, preview, and p
     ```
 
 3.  **Apply Changes**
+
     ```bash
     source ~/.zshrc
     ```
@@ -57,24 +59,25 @@ Keep your local `.env.local` in sync with Vercel’s development, preview, and p
 ❯ vercelenv
 
 # push only
-❯ vercelenv --push
+❯ vercelenv -u, --push
 
 # pull only
-❯ vercelenv --pull
+❯ vercelenv -d, --pull
 
 # clean only
-❯ vercelenv --clean
+❯ vercelenv -c, --clean
 
 # all + branch-scoped preview
-❯ vercelenv --all --branch-preview
+❯ vercelenv -a -b
 
 # show help
-❯ vercelenv --help
+❯ vercelenv -h, --help
 ```
 
 ## Dependencies
 
 -   **Vercel CLI**: Install via pnpm: `pnpm add -g vercel` (or `npm install -g vercel`).
+-   **jq**: JSON processor required for the clean operation. Install via `brew install jq`, `apt install jq`, etc.
 
 ## Configuration Details
 

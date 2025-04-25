@@ -2,6 +2,8 @@
 # vercelenv
 # -----------------------------------------------------------------------------
 #
+# Function: vercelenv
+#
 # Description:
 #   Manage Vercel environment variables across targets:
 #     • Push: add missing .env.local keys to development, preview, production
@@ -11,7 +13,27 @@
 # Usage:
 #   vercelenv [OPTIONS]
 #
+# Options:
+#   -u, --push           add missing keys
+#   -d, --pull           sync production
+#   -c, --clean          remove stale keys
+#   -a, --all            run all operations
+#   -b, --branch-preview scope preview env to current branch
+#   -h, --help           show this help and exit
+#
 # -----------------------------------------------------------------------------
+
+# color codes (only define if not already set)
+if [[ -z $ESC ]];        then readonly ESC="\033";          fi
+if [[ -z $RESET ]];      then readonly RESET="${ESC}[0m";   fi
+if [[ -z $RED ]];        then readonly RED="${ESC}[0;31m";   fi
+if [[ -z $GREEN ]];      then readonly GREEN="${ESC}[0;32m"; fi
+if [[ -z $YELLOW ]];     then readonly YELLOW="${ESC}[0;33m";fi
+if [[ -z $BLUE ]];       then readonly BLUE="${ESC}[0;34m";  fi
+if [[ -z $BOLD_RED ]];   then readonly BOLD_RED="${ESC}[1;31m";   fi
+if [[ -z $BOLD_GREEN ]]; then readonly BOLD_GREEN="${ESC}[1;32m"; fi
+if [[ -z $BOLD_YELLOW ]];then readonly BOLD_YELLOW="${ESC}[1;33m";fi
+if [[ -z $BOLD_BLUE ]];  then readonly BOLD_BLUE="${ESC}[1;34m";  fi
 
 # push missing vars
 function VercelEnvPush() {
@@ -20,10 +42,7 @@ function VercelEnvPush() {
 
     key="${line%%=*}"
     val="${line#*=}"
-    # strip literal surrounding quotes, if any
-    val="${val#\"}"
-    val="${val%\"}"
-    # remove carriage returns
+    val="${val#\"}"; val="${val%\"}"
     val="${val//$'\r'/}"
 
     for target in development preview production; do
@@ -34,12 +53,11 @@ function VercelEnvPush() {
         scope=("$target")
       fi
 
-      echo "PUSH [${scope[*]}]: $key"
-      existingKeys=( ${(f)"$(vercel env ls "${scope[@]}" | tail -n +3 | awk '{print $1}')"} )
-      if [[ " ${existingKeys[*]} " == *" $key "* ]]; then
-        echo "SKIP [${scope[*]}]: $key"
+      existing=( ${(f)"$(vercel env ls "${scope[@]}" | tail -n +3 | awk '{print $1}')"} )
+      if [[ " ${existing[*]} " == *" $key "* ]]; then
+        echo "${YELLOW}⚠️ SKIP${RESET} [${scope[*]}]: ${BOLD_YELLOW}$key${RESET}"
       else
-        echo "ADD  [${scope[*]}]: $key"
+        echo "${GREEN}✅ ADD${RESET} [${scope[*]}]: ${BOLD_GREEN}$key${RESET}"
         printf "%s" "$val" | vercel env add "$key" "${scope[@]}"
       fi
     done
@@ -48,7 +66,7 @@ function VercelEnvPush() {
 
 # pull production vars
 function VercelEnvPull() {
-  echo "PULL [production]: .env.production.local"
+  echo "${BLUE}🔄 PULL${RESET} [production]: ${BOLD_BLUE}.env.production.local${RESET}"
   vercel env pull .env.production.local --environment production
 }
 
@@ -63,7 +81,7 @@ function VercelEnvClean() {
       scope=("$target")
     fi
 
-    echo "CLEAN [${scope[*]}]: stale check"
+    echo "${BLUE}🧹 CLEAN${RESET} [${scope[*]}]: stale check"
     vercel env ls "${scope[@]}" \
       | tail -n +3 \
       | awk '{print $1}' \
@@ -72,7 +90,7 @@ function VercelEnvClean() {
     while read -r key; do
       [[ -z $key ]] && continue
       if ! grep -q "^$key=" .env.local; then
-        echo "REMOVE [${scope[*]}]: $key"
+        echo "${RED}❌ REMOVE${RESET} [${scope[*]}]: ${BOLD_RED}$key${RESET}"
         vercel env rm "$key" "${scope[@]}"
       fi
     done < "$tmp"
@@ -86,24 +104,31 @@ function vercelenv() {
   branchScopedPreview=false
 
   # help
-  for arg; do
-    [[ $arg == --help ]] && {
-      cat <<-EOF
-Usage: vercelenv [--push] [--pull] [--clean] [--all] [--branch-preview] [--help]
+  if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    cat <<-EOF
+Usage: vercelenv [OPTIONS]
+
+Options:
+  -u, --push           add missing keys
+  -d, --pull           sync production
+  -c, --clean          remove stale keys
+  -a, --all            run all operations
+  -b, --branch-preview scope preview env to current branch
+  -h, --help           show this help and exit
 EOF
-      return 0
-    }
-  done
+    return 0
+  fi
 
   # parse flags
   while [[ $# -gt 0 ]]; do
     case $1 in
-      --push)            ops+=(push) ;;
-      --pull)            ops+=(pull) ;;
-      --clean)           ops+=(clean) ;;
-      --all)             ops=(push pull clean) ;;
-      --branch-preview)  branchScopedPreview=true ;;
-      *)                 echo "vercelenv: unknown flag $1" >&2; return 1 ;;
+      -u|--push)           ops+=(push) ;;
+      -d|--pull)           ops+=(pull) ;;
+      -c|--clean)          ops+=(clean) ;;
+      -a|--all)            ops=(push pull clean) ;;
+      -b|--branch-preview) branchScopedPreview=true ;;
+      -h|--help)           ops+=(help) ;;
+      *) echo "${RED}vercelenv: unknown flag $1${RESET}" >&2; return 1 ;;
     esac
     shift
   done
@@ -117,11 +142,12 @@ EOF
 # completion
 function _vercelenv() {
   _arguments \
-    '--push[add missing keys]' \
-    '--pull[sync production]' \
-    '--clean[remove stale keys]' \
-    '--all[run all]' \
-    '--branch-preview[scope preview]' \
+    '-u[add missing keys]' \
+    '-d[sync production]' \
+    '-c[remove stale keys]' \
+    '-a[run all operations]' \
+    '-b[scope preview env]' \
+    '-h[show help]' \
     '--help[show help]'
 }
 compdef _vercelenv vercelenv
