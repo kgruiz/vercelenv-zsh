@@ -1,5 +1,3 @@
-# ~/.zsh/functions/vercelenv.zsh
-
 # -----------------------------------------------------------------------------
 # vercelenv
 # -----------------------------------------------------------------------------
@@ -17,8 +15,16 @@
 
 # push missing vars
 function VercelEnvPush() {
-  while IFS='=' read -r key val; do
-    [[ $key == \#* || -z $key ]] && continue
+  while read -r line; do
+    [[ $line == \#* || -z $line ]] && continue
+
+    key="${line%%=*}"
+    val="${line#*=}"
+    # strip literal surrounding quotes, if any
+    val="${val#\"}"
+    val="${val%\"}"
+    # remove carriage returns
+    val="${val//$'\r'/}"
 
     for target in development preview production; do
       if [[ $target == preview && $branchScopedPreview == true ]]; then
@@ -34,7 +40,7 @@ function VercelEnvPush() {
         echo "SKIP [${scope[*]}]: $key"
       else
         echo "ADD  [${scope[*]}]: $key"
-        echo "$val" | vercel env add "$key" "${scope[@]}"
+        printf "%s" "$val" | vercel env add "$key" "${scope[@]}"
       fi
     done
   done < .env.local
@@ -64,6 +70,7 @@ function VercelEnvClean() {
       > "$tmp"
 
     while read -r key; do
+      [[ -z $key ]] && continue
       if ! grep -q "^$key=" .env.local; then
         echo "REMOVE [${scope[*]}]: $key"
         vercel env rm "$key" "${scope[@]}"
