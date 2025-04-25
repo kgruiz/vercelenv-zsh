@@ -75,14 +75,12 @@ Keep your local `.env.local` in sync with Vercel’s development, preview, and p
 ## Dependencies
 
 -   **Vercel CLI**: Install via pnpm: `pnpm add -g vercel` (or `npm install -g vercel`).
--   **jq**: JSON processor. Install via `brew install jq`, `apt install jq`, or your distro's package manager.
 
 ## Configuration Details
 
 -   **`.env.local`**: Source of truth for variables to push.
 -   **`.env.production.local`**: Snapshot file for pulled production vars.
 -   **Vercel CLI**: Requires `vercel` in `$PATH`.
--   **JSON parsing**: Requires `jq` for the `clean` operation.
 
 ## Contributing
 
