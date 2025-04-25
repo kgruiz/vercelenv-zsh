@@ -1,27 +1,21 @@
+# ~/.zsh/functions/vercelenv.zsh
+
 # -----------------------------------------------------------------------------
 # vercelenv
 # -----------------------------------------------------------------------------
 #
 # Description:
 #   Manage Vercel environment variables across targets:
-#     • Push: upload .env.local keys to development, preview, production
+#     • Push: add missing .env.local keys to development, preview, production
 #     • Pull: sync production vars into .env.production.local
-#     • Clean: remove stale keys from Vercel not in .env.local
+#     • Clean: remove stale keys not in .env.local
 #
 # Usage:
 #   vercelenv [OPTIONS]
 #
-# Options:
-#   --push            upload .env.local to Vercel
-#   --pull            sync production vars to .env.production.local
-#   --clean           remove stale keys from Vercel targets
-#   --all             run push, pull, and clean
-#   --branch-preview  scope preview operations to current Git branch
-#   --help            display this help and exit
-#
 # -----------------------------------------------------------------------------
 
-# helper: push local vars to Vercel
+# push missing vars
 function VercelEnvPush() {
   while IFS='=' read -r key val; do
     [[ $key == \#* || -z $key ]] && continue
@@ -34,53 +28,61 @@ function VercelEnvPush() {
         scope=("$target")
       fi
 
-      yes | vercel env rm "$key" "${scope[@]}" 2>/dev/null
-      echo "$val" | vercel env add "$key" "${scope[@]}"
+      echo "PUSH [${scope[*]}]: $key"
+      existingKeys=( ${(f)"$(vercel env ls "${scope[@]}" | tail -n +3 | awk '{print $1}')"} )
+      if [[ " ${existingKeys[*]} " == *" $key "* ]]; then
+        echo "SKIP [${scope[*]}]: $key"
+      else
+        echo "ADD  [${scope[*]}]: $key"
+        echo "$val" | vercel env add "$key" "${scope[@]}"
+      fi
     done
   done < .env.local
 }
 
-# helper: pull production vars locally
+# pull production vars
 function VercelEnvPull() {
+  echo "PULL [production]: .env.production.local"
   vercel env pull .env.production.local --environment production
 }
 
-# helper: clean stale keys from Vercel
+# clean stale keys
 function VercelEnvClean() {
   tmp=$(mktemp)
-
   for target in development preview production; do
-    vercel env ls "$target" \
+    if [[ $target == preview && $branchScopedPreview == true ]]; then
+      branch=$(git rev-parse --abbrev-ref HEAD)
+      scope=(preview "$branch")
+    else
+      scope=("$target")
+    fi
+
+    echo "CLEAN [${scope[*]}]: stale check"
+    vercel env ls "${scope[@]}" \
       | tail -n +3 \
       | awk '{print $1}' \
       > "$tmp"
 
     while read -r key; do
-      grep -q "^$key=" .env.local || vercel env rm "$key" "$target"
+      if ! grep -q "^$key=" .env.local; then
+        echo "REMOVE [${scope[*]}]: $key"
+        vercel env rm "$key" "${scope[@]}"
+      fi
     done < "$tmp"
   done
-
   rm "$tmp"
 }
 
-# main entry: manage push/pull/clean
+# main entry
 function vercelenv() {
   local -a ops=()
   branchScopedPreview=false
 
-  # show help
+  # help
   for arg; do
     [[ $arg == --help ]] && {
       cat <<-EOF
 Usage: vercelenv [--push] [--pull] [--clean] [--all] [--branch-preview] [--help]
-
-Options:
-  --push            upload .env.local to Vercel
-  --pull            sync production vars to .env.production.local
-  --clean           remove stale keys from Vercel targets
-  --all             run push, pull, and clean
-  --branch-preview  scope preview operations to current Git branch
-  --help            display this help and exit
 EOF
       return 0
     }
@@ -98,8 +100,6 @@ EOF
     esac
     shift
   done
-
-  # default to all
   (( ${#ops[@]} == 0 )) && ops=(push pull clean)
 
   [[ " ${ops[*]} " == *" push "* ]] && VercelEnvPush
@@ -107,14 +107,14 @@ EOF
   [[ " ${ops[*]} " == *" clean "* ]] && VercelEnvClean
 }
 
-# zsh completion
+# completion
 function _vercelenv() {
   _arguments \
-    '--push[upload .env.local to Vercel]' \
-    '--pull[sync production vars locally]' \
+    '--push[add missing keys]' \
+    '--pull[sync production]' \
     '--clean[remove stale keys]' \
-    '--all[run push, pull, clean]' \
-    '--branch-preview[scope preview to git branch]' \
-    '--help[show usage]'
+    '--all[run all]' \
+    '--branch-preview[scope preview]' \
+    '--help[show help]'
 }
 compdef _vercelenv vercelenv
