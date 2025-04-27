@@ -6,17 +6,17 @@ Keep your local `.env.local` in sync with Vercel’s development, preview, and p
 
 ## Key Features
 
--   **Push**: Upload keys from `.env.local` to all targets (`development`, `preview`, `production`).
--   **Pull**: Download production variables into `.env.production.local`.
--   **Clean**: Remove variables in Vercel not listed in `.env.local`.
--   **Branch-Scoped Preview**: Optionally scope preview vars to current Git branch.
--   **Zsh Autocomplete**: Tab-completion for commands and flags.
--   **Colorized Output**: Clear, colored status messages for each operation.
--   **Single Script**: Lightweight `vercelenv.zsh` file.
+- **Push**: Upload keys from `.env.local` to all targets (`development`, `preview`, `production`).
+- **Pull**: Download production variables into `.env.production.local`.
+- **Clean**: Remove variables in Vercel not listed in `.env.local`.
+- **Branch-Scoped Preview**: Optionally scope preview vars to current Git branch.
+- **Zsh Autocomplete**: Tab-completion for commands and flags.
+- **Colorized Output**: Clear, colored status messages for each operation.
+- **Single Script**: Lightweight `vercelenv.zsh` file.
 
 ## Installation
 
-1.  **Clone or Download**
+1. **Clone or Download**
 
     ```bash
     # Clone repo
@@ -29,7 +29,7 @@ Keep your local `.env.local` in sync with Vercel’s development, preview, and p
       https://raw.githubusercontent.com/kgruiz/vercelenv-zsh/main/vercelenv.zsh
     ```
 
-2.  **Source in `.zshrc`**
+2. **Source in `.zshrc`**
 
     ```bash
     # init zsh completion
@@ -38,15 +38,18 @@ Keep your local `.env.local` in sync with Vercel’s development, preview, and p
 
     # load vercelenv
     VERCELENV_PATH="$HOME/.config/zsh/plugins/vercelenv-zsh/vercelenv.zsh"
-    if [ -f "$VERCELENV_PATH" ]; then
-        source "$VERCELENV_PATH" 2>/dev/null \
-          || echo "Error: failed to source vercelenv.zsh" >&2
+    if [ -f "$VERCELENV_FUNC_PATH" ]; then
+        if ! . "$VERCELENV_FUNC_PATH" 2>&1; then
+        echo "Error: Failed to source \"$(basename "$VERCELENV_FUNC_PATH")\"" >&2
+      fi
     else
-        echo "Error: vercelenv.zsh not found at $VERCELENV_PATH" >&2
+      echo "Error: \"$(basename "$VERCELENV_FUNC_PATH")\" not found at:" >&2
+      echo "  $VERCELENV_FUNC_PATH" >&2
     fi
+    unset VERCELENV_FUNC_PATH
     ```
 
-3.  **Apply Changes**
+3. **Apply Changes**
 
     ```bash
     source ~/.zshrc
@@ -76,14 +79,14 @@ Keep your local `.env.local` in sync with Vercel’s development, preview, and p
 
 ## Dependencies
 
--   **Vercel CLI**: Install via pnpm: `pnpm add -g vercel` (or `npm install -g vercel`).
--   **jq**: JSON processor required for the clean operation. Install via `brew install jq`, `apt install jq`, etc.
+- **Vercel CLI**: Install via pnpm: `pnpm add -g vercel` (or `npm install -g vercel`).
+- **jq**: JSON processor required for the clean operation. Install via `brew install jq`, `apt install jq`, etc.
 
 ## Configuration Details
 
--   **`.env.local`**: Source of truth for variables to push.
--   **`.env.production.local`**: Snapshot file for pulled production vars.
--   **Vercel CLI**: Requires `vercel` in `$PATH`.
+- **`.env.local`**: Source of truth for variables to push.
+- **`.env.production.local`**: Snapshot file for pulled production vars.
+- **Vercel CLI**: Requires `vercel` in `$PATH`.
 
 ## Contributing
 
