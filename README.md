@@ -1,8 +1,6 @@
 # vercelenv-zsh
 
-**`vercelenv` provides a unified Zsh function to manage Vercel environment variables (push, pull, clean).**
-
-Keep your local `.env.local` in sync with Vercel’s development, preview, and production targets, and prune stale entries.
+`vercelenv` provides a unified Zsh function to manage Vercel environment variables (push, pull, clean). It keeps your local `.env.local` in sync with Vercel’s development, preview, and production targets, and prunes stale entries.
 
 ## Key Features
 
