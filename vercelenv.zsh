@@ -104,6 +104,11 @@ function VercelEnvClean() {
   rm "$tmp"
 }
 
+# list environment variables
+function VercelEnvList() {
+  vercel env list
+}
+
 # main entry
 function vercelenv() {
   local -a ops=()
@@ -118,6 +123,7 @@ Usage: vercelenv [OPTIONS]
 Options:
   -u, --push           add missing keys
   -d, --pull           sync production
+  -l, --list           list environment variables
   -r, --replace        update existing keys instead of skipping
   -c, --clean          remove stale keys
   -a, --all            run all operations
@@ -132,6 +138,7 @@ EOF
     case $1 in
       -u|--push)           ops+=(push) ;;
       -d|--pull)           ops+=(pull) ;;
+      -l|--list)           ops+=(list) ;;
       -c|--clean)          ops+=(clean) ;;
       -a|--all)            ops=(push pull clean) ;;
       -r|--replace)        replaceExisting=true ;;
@@ -146,6 +153,7 @@ EOF
   [[ " ${ops[*]} " == *" push "* ]] && VercelEnvPush
   [[ " ${ops[*]} " == *" pull "* ]] && VercelEnvPull
   [[ " ${ops[*]} " == *" clean "* ]] && VercelEnvClean
+  [[ " ${ops[*]} " == *" list "* ]] && VercelEnvList
 }
 
 # completion
@@ -153,6 +161,8 @@ function _vercelenv() {
   _arguments \
     '-u[add missing keys]' \
     '-d[sync production]' \
+    '-l[list envs]' \
+    '--list[list envs]' \
     '-r[update existing keys instead of skipping]' \
     '-c[remove stale keys]' \
     '-a[run all operations]' \

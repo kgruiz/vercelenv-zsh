@@ -81,10 +81,11 @@
 | :---: | :----------------: | :--------------------------------------- |
 |  `-u` |      `--push`      | add missing keys                         |
 |  `-d` |      `--pull`      | sync production                          |
-|  `-c` |      `--clean`     | remove stale keys                        |
-|  `-a` |       `--all`      | run all operations (push, pull, clean)   |
-|  `-b` | `--branch-preview` | scope preview env to current branch      |
+|  `-l` |      `--list`      | list environment variables               |
 |  `-r` |     `--replace`    | update existing keys instead of skipping |
+|  `-c` |      `--clean`     | remove stale keys                        |
+|  `-a` |       `--all`      | run all operations                       |
+|  `-b` | `--branch-preview` | scope preview env to current branch      |
 |  `-h` |      `--help`      | show this help and exit                  |
 
 ## Dependencies
