@@ -55,7 +55,13 @@ function VercelEnvPush() {
 
       existing=( ${(f)"$(vercel env ls "${scope[@]}" | tail -n +3 | awk '{print $1}')"} )
       if [[ " ${existing[*]} " == *" $key "* ]]; then
-        echo "${YELLOW}⚠️ SKIP${RESET} [${scope[*]}]: ${BOLD_YELLOW}$key${RESET}"
+        if [[ $replaceExisting == true ]]; then
+          echo "${BLUE}🔄 UPDATE${RESET} [${scope[*]}]: ${BOLD_BLUE}$key${RESET}"
+          vercel env rm "$key" "${scope[@]}" --yes
+          printf "%s" "$val" | vercel env add "$key" "${scope[@]}"
+        else
+          echo "${YELLOW}⚠️ SKIP${RESET} [${scope[*]}]: ${BOLD_YELLOW}$key${RESET}"
+        fi
       else
         echo "${GREEN}✅ ADD${RESET} [${scope[*]}]: ${BOLD_GREEN}$key${RESET}"
         printf "%s" "$val" | vercel env add "$key" "${scope[@]}"
@@ -102,6 +108,7 @@ function VercelEnvClean() {
 function vercelenv() {
   local -a ops=()
   branchScopedPreview=false
+  replaceExisting=false
 
   # help
   if [[ "$1" == "-h" || "$1" == "--help" ]]; then
@@ -111,6 +118,7 @@ Usage: vercelenv [OPTIONS]
 Options:
   -u, --push           add missing keys
   -d, --pull           sync production
+  -r, --replace        update existing keys instead of skipping
   -c, --clean          remove stale keys
   -a, --all            run all operations
   -b, --branch-preview scope preview env to current branch
@@ -126,6 +134,7 @@ EOF
       -d|--pull)           ops+=(pull) ;;
       -c|--clean)          ops+=(clean) ;;
       -a|--all)            ops=(push pull clean) ;;
+      -r|--replace)        replaceExisting=true ;;
       -b|--branch-preview) branchScopedPreview=true ;;
       -h|--help)           ops+=(help) ;;
       *) echo "${RED}vercelenv: unknown flag $1${RESET}" >&2; return 1 ;;
@@ -144,9 +153,11 @@ function _vercelenv() {
   _arguments \
     '-u[add missing keys]' \
     '-d[sync production]' \
+    '-r[update existing keys instead of skipping]' \
     '-c[remove stale keys]' \
     '-a[run all operations]' \
     '-b[scope preview env]' \
+    '--replace[update existing keys instead of skipping]' \
     '-h[show help]' \
     '--help[show help]'
 }

@@ -75,6 +75,18 @@
 ❯ vercelenv -h, --help
 ```
 
+## Options
+
+| Short |        Long        | Description                              |
+| :---: | :----------------: | :--------------------------------------- |
+|  `-u` |      `--push`      | add missing keys                         |
+|  `-d` |      `--pull`      | sync production                          |
+|  `-c` |      `--clean`     | remove stale keys                        |
+|  `-a` |       `--all`      | run all operations (push, pull, clean)   |
+|  `-b` | `--branch-preview` | scope preview env to current branch      |
+|  `-r` |     `--replace`    | update existing keys instead of skipping |
+|  `-h` |      `--help`      | show this help and exit                  |
+
 ## Dependencies
 
 - **Vercel CLI**: Install via pnpm: `pnpm add -g vercel` (or `npm install -g vercel`).
