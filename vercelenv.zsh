@@ -91,7 +91,7 @@ function VercelEnvClean() {
       [[ -z $key ]] && continue
       if ! grep -q "^$key=" .env.local; then
         echo "${RED}❌ REMOVE${RESET} [${scope[*]}]: ${BOLD_RED}$key${RESET}"
-        vercel env rm "$key" "${scope[@]}"
+        vercel env rm "$key" "${scope[@]}" --yes
       fi
     done < "$tmp"
   done
