@@ -146,7 +146,7 @@ EOF
       -r|--replace)        replaceExisting=true ;;
       -b|--branch-preview) branchScopedPreview=true ;;
       -h|--help)           ops+=(help) ;;
-      *) echo "${RED}vercelenv: unknown flag $1${RESET}" >&2; return 1 ;;
+      *) echo "${RED}vercelenv: unknown flag $1${RESET}" >&2; unset -f VercelEnvPush VercelEnvPull VercelEnvClean VercelEnvList; return 1 ;;
     esac
     shift
   done
