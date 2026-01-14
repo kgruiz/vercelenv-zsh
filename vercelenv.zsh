@@ -176,4 +176,8 @@ function _vercelenv() {
     '-h[show help]' \
     '--help[show help]'
 }
-compdef _vercelenv vercelenv
+if (( $+functions[_defer_compdef] )); then
+  _defer_compdef _vercelenv vercelenv
+elif (( $+functions[compdef] )); then
+  compdef _vercelenv vercelenv
+fi
